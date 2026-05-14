@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lms.exam.mapper.OptionMapper">
+
+    <select id="findById" resultType="com.lms.exam.model.Option">
+        SELECT * FROM options WHERE option_id = #{optionId}
+    </select>
+
+    <select id="findByQuestionId" resultType="com.lms.exam.model.Option">
+        SELECT * FROM options 
+        WHERE question_id = #{questionId}
+        ORDER BY option_id
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="optionId">
+        INSERT INTO options (question_id, option_text, option_order, is_correct)
+        VALUES (#{questionId}, #{optionText}, #{optionOrder},#{isCorrect})
+    </insert>
+
+    <update id="update">
+        UPDATE options
+        SET option_text = #{optionText},
+            is_correct = #{isCorrect}
+        WHERE option_id = #{optionId}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM options WHERE option_id = #{optionId}
+    </delete>
+
+    <delete id="deleteByQuestionId">
+        DELETE FROM options WHERE question_id = #{questionId}
+    </delete>
+</mapper>

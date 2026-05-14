@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lms.exam.mapper.QuestionMapper">
+
+    <!-- ✅ ResultMap: options 포함 -->
+    <resultMap id="QuestionWithOptionsMap" type="com.lms.exam.model.Question">
+        <id property="questionId" column="question_id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="categoryName" column="category_name"/>
+        <result property="questionText" column="question_text"/>
+        <result property="explanation" column="explanation"/>
+        <result property="points" column="points"/>
+        <result property="difficulty" column="difficulty"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="createdAt" column="created_at"/>
+        
+        <!-- ✅ options 컬렉션 -->
+        <collection property="options" ofType="com.lms.exam.model.Option">
+            <id property="optionId" column="option_id"/>
+            <result property="questionId" column="question_id"/>
+            <result property="optionText" column="option_text"/>
+             <result property="optionOrder" column="option_order"/>
+            <result property="isCorrect" column="is_correct"/>
+        </collection>
+    </resultMap>
+<resultMap id="OptionMap" type="com.lms.exam.model.Option">
+    <id property="optionId" column="option_id"/>
+    <result property="questionId" column="question_id"/>
+    <result property="optionText" column="option_text"/>
+    <result property="optionOrder" column="option_order"/>
+    <result property="isCorrect" column="is_correct"/>
+</resultMap>
+<select id="findOptionsByQuestionId" resultMap="OptionMap">
+    SELECT 
+        option_id,
+        question_id,
+        option_text,
+        option_order,
+        is_correct
+    FROM options
+    WHERE question_id = #{questionId}
+    ORDER BY option_id
+</select>
+    <!-- ✅ 단일 문제 조회 (options 포함) -->
+    <select id="findById" resultMap="QuestionWithOptionsMap">
+        SELECT 
+            q.question_id,
+            q.category_id,
+            c.category_name,
+            q.question_text,
+            q.explanation,
+            q.points,
+            q.difficulty,
+            q.created_by,
+            q.created_at,
+            o.option_id,
+            o.option_text,
+            o.is_correct
+        FROM questions q
+        LEFT JOIN categories c ON q.category_id = c.category_id
+        LEFT JOIN options o ON q.question_id = o.question_id
+        WHERE q.question_id = #{questionId}
+        ORDER BY o.option_id
+    </select>
+
+    <!-- ✅ 전체 문제 조회 (options 포함) -->
+    <select id="findAll" resultMap="QuestionWithOptionsMap">
+        SELECT 
+            q.question_id,
+            q.category_id,
+            c.category_name,
+            q.question_text,
+            q.explanation,
+            q.points,
+            q.difficulty,
+            q.created_by,
+            q.created_at,
+            o.option_id,
+            o.option_text,
+            o.is_correct
+        FROM questions q
+        LEFT JOIN categories c ON q.category_id = c.category_id
+        LEFT JOIN options o ON q.question_id = o.question_id
+        ORDER BY q.created_at DESC, o.option_id
+        <if test="size != null and offset != null">
+            LIMIT #{size} OFFSET #{offset}
+        </if>
+    </select>
+
+    <!-- ✅ 카테고리별 문제 조회 (options 포함) -->
+    <select id="findByCategoryId" resultMap="QuestionWithOptionsMap">
+        SELECT 
+            q.question_id,
+            q.category_id,
+            c.category_name,
+            q.question_text,
+            q.explanation,
+            q.points,
+            q.difficulty,
+            q.created_by,
+            q.created_at,
+            o.option_id,
+            o.option_text,
+            o.is_correct
+        FROM questions q
+        LEFT JOIN categories c ON q.category_id = c.category_id
+        LEFT JOIN options o ON q.question_id = o.question_id
+        WHERE q.category_id = #{categoryId}
+        ORDER BY q.created_at DESC, o.option_id
+        <if test="pageRequest.size != null and pageRequest.offset != null">
+            LIMIT #{pageRequest.size} OFFSET #{pageRequest.offset}
+        </if>
+    </select>
+
+    <!-- 문제 수 조회 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM questions
+    </select>
+
+    <!-- 카테고리별 문제 수 조회 -->
+    <select id="countByCategory" resultType="long">
+        SELECT COUNT(*) FROM questions WHERE category_id = #{categoryId}
+    </select>
+
+    <!-- 문제 생성 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="questionId">
+        INSERT INTO questions (
+            category_id, question_text, explanation, points, difficulty, created_by
+        ) VALUES (
+            #{categoryId}, #{questionText}, #{explanation}, #{points}, #{difficulty}, #{createdBy}
+        )
+    </insert>
+
+    <!-- 문제 수정 -->
+    <update id="update">
+        UPDATE questions
+        SET category_id = #{categoryId},
+            question_text = #{questionText},
+            explanation = #{explanation},
+            points = #{points},
+            difficulty = #{difficulty}
+        WHERE question_id = #{questionId}
+    </update>
+
+    <!-- 문제 삭제 -->
+    <delete id="delete">
+        DELETE FROM questions WHERE question_id = #{questionId}
+    </delete>
+</mapper>

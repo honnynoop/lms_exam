@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lms.exam.mapper.CategoryMapper">
+    <select id="findAll" resultType="com.lms.exam.model.Category">
+        SELECT * FROM categories WHERE is_active = true ORDER BY category_name
+    </select>
+
+    <select id="findById" resultType="com.lms.exam.model.Category">
+        SELECT * FROM categories WHERE category_id = #{categoryId}
+    </select>
+
+    <select id="findAllWithStats" resultType="com.lms.exam.model.Category">
+        SELECT c.*, COUNT(q.question_id) as question_count
+        FROM categories c
+        LEFT JOIN questions q ON c.category_id = q.category_id
+        WHERE c.is_active = true
+        GROUP BY c.category_id
+        ORDER BY c.category_name
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="categoryId">
+        INSERT INTO categories (category_name, description, is_active)
+        VALUES (#{categoryName}, #{description}, #{isActive})
+    </insert>
+    
+    <update id="update">
+        UPDATE categories
+        SET category_name = #{categoryName}, 
+            description = #{description}, 
+            is_active = #{isActive}
+        WHERE category_id = #{categoryId}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM categories WHERE category_id = #{categoryId}
+    </delete>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM categories WHERE is_active = true
+    </select>
+</mapper>

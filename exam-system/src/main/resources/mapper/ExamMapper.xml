@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lms.exam.mapper.ExamMapper">
+
+    <!-- ✅ NEW: Question with Options ResultMap -->
+    <resultMap id="QuestionWithOptionsMap" type="com.lms.exam.model.Question">
+        <id property="questionId" column="question_id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="categoryName" column="category_name"/>
+        <result property="questionText" column="question_text"/>
+        <result property="explanation" column="explanation"/>
+        <result property="points" column="points"/>
+        <result property="difficulty" column="difficulty"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="createdAt" column="created_at"/>
+        
+        <!-- ✅ options 컬렉션 -->
+        <collection property="options" ofType="com.lms.exam.model.Option">
+            <id property="optionId" column="option_id"/>
+            <result property="questionId" column="question_id"/>
+            <result property="optionText" column="option_text"/>
+            <result property="isCorrect" column="is_correct"/>
+        </collection>
+    </resultMap>
+
+    <!-- ✅ NEW: 시험의 문제 목록 조회 (options 포함) -->
+    <select id="findQuestionsByExamId" resultMap="QuestionWithOptionsMap">
+        SELECT 
+            q.question_id,
+            q.category_id,
+            c.category_name,
+            q.question_text,
+            q.explanation,
+            q.points,
+            q.difficulty,
+            q.created_by,
+            q.created_at,
+            o.option_id,
+            o.option_text,
+            o.is_correct
+        FROM exam_questions eq
+        INNER JOIN questions q ON eq.question_id = q.question_id
+        LEFT JOIN categories c ON q.category_id = c.category_id
+        LEFT JOIN options o ON q.question_id = o.question_id
+        WHERE eq.exam_id = #{examId}
+        ORDER BY eq.question_order, o.option_id
+    </select>
+
+    <!-- 기존 쿼리들 -->
+    
+    <select id="findById" resultType="com.lms.exam.model.Exam">
+        SELECT e.*, c.category_name
+        FROM exams e
+        LEFT JOIN categories c ON e.category_id = c.category_id
+        WHERE e.exam_id = #{examId}
+    </select>
+
+    <select id="findAll" resultType="com.lms.exam.model.Exam">
+        SELECT e.*, c.category_name
+        FROM exams e
+        LEFT JOIN categories c ON e.category_id = c.category_id
+        ORDER BY e.created_at DESC
+        <if test="size != null and offset != null">
+            LIMIT #{size} OFFSET #{offset}
+        </if>
+    </select>
+    
+    <select id="findActiveExams" resultType="com.lms.exam.model.Exam">
+        SELECT e.*, c.category_name
+        FROM exams e
+        LEFT JOIN categories c ON e.category_id = c.category_id
+        WHERE e.is_active = true
+        ORDER BY 
+            CASE WHEN e.exam_date IS NOT NULL THEN 0 ELSE 1 END,
+            e.exam_date DESC,
+            e.created_at DESC
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM exams
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="examId">
+        INSERT INTO exams (exam_title, category_id, description, total_questions, total_points,
+                          duration_minutes, passing_score, is_published, is_active, exam_date, created_by)
+        VALUES (#{examTitle}, #{categoryId}, #{description}, #{totalQuestions}, #{totalPoints},
+                #{durationMinutes}, #{passingScore}, #{isPublished}, #{isActive}, #{examDate}, #{createdBy})
+    </insert>
+
+    <update id="update">
+        UPDATE exams
+        SET exam_title = #{examTitle},
+            description = #{description},
+            total_points = #{totalPoints},
+            duration_minutes = #{durationMinutes},
+            passing_score = #{passingScore},
+            is_published = #{isPublished},
+            is_active = #{isActive},
+            exam_date = #{examDate}
+        WHERE exam_id = #{examId}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM exams WHERE exam_id = #{examId}
+    </delete>
+
+    <insert id="insertExamQuestion">
+        INSERT INTO exam_questions (exam_id, question_id, question_order)
+        VALUES (#{examId}, #{questionId}, #{questionOrder})
+    </insert>
+
+    <select id="findQuestionIdsByExamId" resultType="long">
+        SELECT question_id
+        FROM exam_questions
+        WHERE exam_id = #{examId}
+        ORDER BY question_order
+    </select>
+    
+    <update id="updateExamQuestionOrder">
+        UPDATE exam_questions
+        SET question_order = #{questionOrder}
+        WHERE exam_id = #{examId} AND question_id = #{questionId}
+    </update>
+</mapper>

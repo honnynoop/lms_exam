@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lms.exam.mapper.QuestionStatisticsMapper">
+    <select id="findByQuestionId" resultType="com.lms.exam.model.QuestionStatistics">
+        SELECT qs.*, q.question_text, c.category_name, q.difficulty
+        FROM question_statistics qs
+        LEFT JOIN questions q ON qs.question_id = q.question_id
+        LEFT JOIN categories c ON q.category_id = c.category_id
+        WHERE qs.question_id = #{questionId}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO question_statistics (question_id, total_attempts, correct_count, wrong_count)
+        VALUES (#{questionId}, 0, 0, 0)
+    </insert>
+
+    <update id="update">
+        UPDATE question_statistics
+        SET total_attempts = #{totalAttempts},
+            correct_count = #{correctCount},
+            wrong_count = #{wrongCount},
+            correct_rate = CASE 
+                WHEN #{totalAttempts} > 0 THEN (#{correctCount} * 100.0 / #{totalAttempts})
+                ELSE 0 
+            END
+        WHERE question_id = #{questionId}
+    </update>
+    
+    <update id="incrementAttempts">
+        INSERT INTO question_statistics (question_id, total_attempts, correct_count, wrong_count, correct_rate)
+        VALUES (#{questionId}, 1, 0, 0, 0)
+        ON DUPLICATE KEY UPDATE 
+            total_attempts = total_attempts + 1,
+            correct_rate = CASE 
+                WHEN total_attempts > 0 THEN (correct_count * 100.0 / total_attempts)
+                ELSE 0 
+            END
+    </update>
+    
+    <update id="incrementCorrect">
+        UPDATE question_statistics
+        SET correct_count = correct_count + 1,
+            correct_rate = CASE 
+                WHEN total_attempts > 0 THEN ((correct_count + 1) * 100.0 / total_attempts)
+                ELSE 0 
+            END
+        WHERE question_id = #{questionId}
+    </update>
+    
+    <update id="incrementWrong">
+        UPDATE question_statistics
+        SET wrong_count = wrong_count + 1
+        WHERE question_id = #{questionId}
+    </update>
+</mapper>

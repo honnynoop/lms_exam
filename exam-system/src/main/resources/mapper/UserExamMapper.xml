@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lms.exam.mapper.UserExamMapper">
+    <select id="findById" resultType="com.lms.exam.model.UserExam">
+        SELECT ue.*, e.exam_title, e.category_id, c.category_name, e.total_points
+        FROM user_exams ue
+        LEFT JOIN exams e ON ue.exam_id = e.exam_id
+        LEFT JOIN categories c ON e.category_id = c.category_id
+        WHERE ue.user_exam_id = #{userExamId}
+    </select>
+
+    <select id="findByUserIdAndExamId" resultType="com.lms.exam.model.UserExam">
+        SELECT * FROM user_exams
+        WHERE user_id = #{userId} AND exam_id = #{examId}
+    </select>
+
+    <select id="findByUserId" resultType="com.lms.exam.model.UserExam">
+        SELECT ue.*, e.exam_title, e.category_id, c.category_name, e.total_points, e.is_published
+        FROM user_exams ue
+        LEFT JOIN exams e ON ue.exam_id = e.exam_id
+        LEFT JOIN categories c ON e.category_id = c.category_id
+        WHERE ue.user_id = #{userId}
+        ORDER BY ue.started_at DESC
+        <if test="pageRequest.size != null and pageRequest.offset != null">
+            LIMIT #{pageRequest.size} OFFSET #{pageRequest.offset}
+        </if>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="userExamId">
+        INSERT INTO user_exams (user_id, exam_id, started_at, total_questions, status)
+        VALUES (#{userId}, #{examId}, #{startedAt}, #{totalQuestions}, #{status})
+    </insert>
+
+    <update id="update">
+        UPDATE user_exams
+        SET submitted_at = #{submittedAt},
+            score = #{score},
+            correct_answers = #{correctAnswers},
+            wrong_answers = #{wrongAnswers},
+            status = #{status}
+        WHERE user_exam_id = #{userExamId}
+    </update>
+
+    <select id="findAnswersByUserExamId" resultType="com.lms.exam.model.UserAnswer">
+        SELECT 
+            ua.*,
+            q.question_text,
+            q.explanation,
+            q.points,
+            selected_opt.option_text as selected_option_text,
+            correct_opt.option_text as correct_option_text
+        FROM user_answers ua
+        LEFT JOIN questions q ON ua.question_id = q.question_id
+        LEFT JOIN options selected_opt ON ua.selected_option_id = selected_opt.option_id
+        LEFT JOIN options correct_opt ON q.question_id = correct_opt.question_id AND correct_opt.is_correct = true
+        WHERE ua.user_exam_id = #{userExamId}
+        ORDER BY ua.answer_id
+    </select>
+
+    <insert id="insertAnswer" useGeneratedKeys="true" keyProperty="answerId">
+        INSERT INTO user_answers (user_exam_id, question_id, selected_option_id, answer_text, is_correct)
+        VALUES (#{userExamId}, #{questionId}, #{selectedOptionId}, #{answerText}, #{isCorrect})
+    </insert>
+</mapper>

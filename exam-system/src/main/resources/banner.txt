@@ -1,0 +1,11 @@
+${AnsiColor.BRIGHT_BLUE}
+ ██╗  ██╗ ██████╗ ███╗   ██╗███████╗██╗   ██╗    ██╗     ███╗   ███╗███████╗
+ ██║  ██║██╔═══██╗████╗  ██║██╔════╝╚██╗ ██╔╝    ██║     ████╗ ████║██╔════╝
+ ███████║██║   ██║██╔██╗ ██║█████╗   ╚████╔╝     ██║     ██╔████╔██║███████╗
+ ██╔══██║██║   ██║██║╚██╗██║██╔══╝    ╚██╔╝      ██║     ██║╚██╔╝██║╚════██║
+ ██║  ██║╚██████╔╝██║ ╚████║███████╗   ██║       ███████╗██║ ╚═╝ ██║███████║
+ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝       ╚══════╝╚═╝     ╚═╝╚══════╝
+${AnsiColor.DEFAULT}
+${AnsiColor.BRIGHT_CYAN}:: Honey LMS :: Spring Boot ${spring-boot.version} ::${AnsiColor.DEFAULT}
+${AnsiColor.BRIGHT_GREEN}:: Learning Management System :: Profile: ${spring.profiles.active} ::${AnsiColor.DEFAULT}
+${AnsiColor.BRIGHT_MAGENTA}:: Made by Honey 🍯 ::  Port: 8080 ::${AnsiColor.DEFAULT}
